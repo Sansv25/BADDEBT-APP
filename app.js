@@ -448,7 +448,7 @@ function renderRowsList() {
 
       const isEven = originalIndex % 2 === 0;
       const rowEl = document.createElement('div');
-      rowEl.setAttribute('draggable', 'true');
+      rowEl.setAttribute('draggable', 'false');
       rowEl.className = `group relative flex flex-col gap-3 p-3.5 rounded-xl border transition-all cursor-default ${
         row.isHeading
           ? 'bg-indigo-950/60 border-indigo-500/40 hover:border-indigo-500/60 shadow-md shadow-indigo-950/30'
@@ -538,7 +538,7 @@ function renderRowsList() {
           </div>
         </div>
 
-        <!-- Period Input Sub-Panel (Rapi & Tidak Menumpuk) -->
+        <!-- Period Input Sub-Panel -->
         ${
           isPeriodOpen
             ? `<div class="w-full pt-3 mt-1 border-t border-slate-800/80 flex flex-col sm:flex-row items-center gap-2.5">
@@ -576,12 +576,19 @@ function renderRowsList() {
         }
       `;
 
-      // Drag Events - Only allow drag if started from .drag-handle icon!
-      rowEl.addEventListener('dragstart', (e) => {
-        if (!e.target.closest('.drag-handle')) {
-          e.preventDefault();
-          return false;
+      // Enable HTML5 Drag ONLY on mousedown of the .drag-handle icon
+      const dragHandle = rowEl.querySelector('.drag-handle');
+      dragHandle.addEventListener('mousedown', () => {
+        rowEl.setAttribute('draggable', 'true');
+      });
+
+      dragHandle.addEventListener('mouseleave', () => {
+        if (state.draggedIndex === null) {
+          rowEl.setAttribute('draggable', 'false');
         }
+      });
+
+      rowEl.addEventListener('dragstart', (e) => {
         state.draggedIndex = originalIndex;
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', originalIndex);
@@ -669,6 +676,7 @@ function renderRowsList() {
       });
 
       rowEl.addEventListener('dragend', () => {
+        rowEl.setAttribute('draggable', 'false');
         rowEl.classList.remove(
           'opacity-40', 'border-cyan-500/80',
           'border-t-4', 'border-b-4', 'border-cyan-400',
