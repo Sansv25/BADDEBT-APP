@@ -448,92 +448,97 @@ function renderRowsList() {
 
       const rowEl = document.createElement('div');
       rowEl.setAttribute('draggable', 'true');
-      rowEl.className = `group relative flex flex-col md:flex-row md:items-center justify-between gap-3 p-3.5 rounded-xl border transition-all cursor-default ${
+      rowEl.className = `group relative flex flex-col gap-3 p-3.5 rounded-xl border transition-all cursor-default ${
         row.isHeading
           ? 'bg-indigo-950/40 border-indigo-500/30 hover:border-indigo-500/50 shadow-md shadow-indigo-950/20'
           : 'bg-slate-900/40 border-slate-800/70 hover:border-slate-700/80 hover:bg-slate-900/80'
       }`;
 
       rowEl.innerHTML = `
-        <div class="flex items-center gap-2.5 flex-1 min-w-0">
-          <div class="drag-handle cursor-grab active:cursor-grabbing p-1 text-slate-500 hover:text-cyan-400 hover:bg-slate-800/80 rounded transition-colors shrink-0" title="Tarik / Drag untuk selipkan di antara baris atau tukar posisi">
-            <i data-lucide="grip-vertical" class="w-4 h-4"></i>
+        <!-- Main Row Content Bar -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full min-w-0">
+          <div class="flex items-center gap-2.5 flex-1 min-w-0">
+            <div class="drag-handle cursor-grab active:cursor-grabbing p-1.5 text-slate-500 hover:text-cyan-400 hover:bg-slate-800/80 rounded-lg transition-colors shrink-0" title="Tarik / Drag khusus dari ikon ini untuk geser baris">
+              <i data-lucide="grip-vertical" class="w-4 h-4"></i>
+            </div>
+
+            <span class="text-xs font-mono text-slate-500 w-6 text-right shrink-0">#${originalIndex + 1}</span>
+            
+            <button
+              type="button"
+              title="Klik untuk mengubah tipe: Kode FAT / List biasa"
+              class="btn-toggle-type shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1.5 ${
+                row.isHeading
+                  ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40 hover:bg-indigo-500/30'
+                  : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700 hover:text-slate-200'
+              }"
+            >
+              <i data-lucide="tag" class="w-3 h-3"></i>
+              <span>${row.isHeading ? 'KODE FAT' : 'PELANGGAN'}</span>
+            </button>
+
+            <div class="flex-1 min-w-0">
+              ${
+                state.editingRowId === row.id
+                  ? `<div class="flex items-center gap-2">
+                      <input type="text" value="${escapeHtml(row.text)}" class="input-inline-edit w-full bg-slate-950 border border-cyan-500/60 rounded-lg px-3 py-1.5 text-sm font-mono text-cyan-200 focus:outline-none" />
+                      <button type="button" class="btn-save-inline p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                      </button>
+                     </div>`
+                  : `<div class="btn-start-edit cursor-pointer px-2 py-1 rounded hover:bg-slate-800/60 transition-colors flex items-center justify-between group/text ${
+                      row.isHeading
+                        ? 'font-bold text-indigo-200 text-base font-mono tracking-wide'
+                        : 'text-sm text-slate-200 font-mono'
+                    }">
+                      <span class="truncate">${escapeHtml(row.text)}</span>
+                      <i data-lucide="edit-3" class="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover/text:opacity-100 transition-opacity ml-2 shrink-0"></i>
+                     </div>`
+              }
+            </div>
           </div>
 
-          <span class="text-xs font-mono text-slate-500 w-6 text-right shrink-0">#${originalIndex + 1}</span>
-          
-          <button
-            type="button"
-            title="Klik untuk mengubah tipe: Kode FAT / List biasa"
-            class="btn-toggle-type shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1.5 ${
-              row.isHeading
-                ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40 hover:bg-indigo-500/30'
-                : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700 hover:text-slate-200'
-            }"
-          >
-            <i data-lucide="tag" class="w-3 h-3"></i>
-            <span>${row.isHeading ? 'KODE FAT' : 'PELANGGAN'}</span>
-          </button>
+          <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
+            <button
+              type="button"
+              class="btn-toggle-deaktivasi inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                isDeaktivasi
+                  ? 'bg-rose-950/80 text-rose-300 border-rose-700/80 shadow-sm shadow-rose-950/40 font-semibold'
+                  : 'bg-slate-800/60 text-slate-400 border-slate-700/60 hover:bg-rose-950/40 hover:text-rose-300 hover:border-rose-800/50'
+              }"
+            >
+              <i data-lucide="power-off" class="w-3.5 h-3.5 text-rose-400"></i>
+              <span>Deaktivasi</span>
+              ${isDeaktivasi ? '<i data-lucide="check" class="w-3.5 h-3.5 text-rose-400 ml-0.5"></i>' : ''}
+            </button>
 
-          <div class="flex-1 min-w-0">
-            ${
-              state.editingRowId === row.id
-                ? `<div class="flex items-center gap-2">
-                    <input type="text" value="${escapeHtml(row.text)}" class="input-inline-edit w-full bg-slate-950 border border-cyan-500/60 rounded-lg px-3 py-1.5 text-sm font-mono text-cyan-200 focus:outline-none" />
-                    <button type="button" class="btn-save-inline p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30">
-                      <i data-lucide="check" class="w-4 h-4"></i>
-                    </button>
-                   </div>`
-                : `<div class="btn-start-edit cursor-pointer px-2 py-1 rounded hover:bg-slate-800/60 transition-colors flex items-center justify-between group/text ${
-                    row.isHeading
-                      ? 'font-bold text-indigo-200 text-base font-mono tracking-wide'
-                      : 'text-sm text-slate-200 font-mono'
-                  }">
-                    <span class="truncate">${escapeHtml(row.text)}</span>
-                    <i data-lucide="edit-3" class="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover/text:opacity-100 transition-opacity ml-2 shrink-0"></i>
-                   </div>`
-            }
+            <button
+              type="button"
+              class="btn-toggle-periode inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                isPeriode
+                  ? 'bg-cyan-950/80 text-cyan-300 border-cyan-700/80 shadow-sm shadow-cyan-950/40 font-semibold'
+                  : 'bg-slate-800/60 text-slate-400 border-slate-700/60 hover:bg-cyan-950/40 hover:text-cyan-300 hover:border-cyan-800/50'
+              }"
+            >
+              <i data-lucide="calendar" class="w-3.5 h-3.5 text-cyan-400"></i>
+              <span>Periode</span>
+              ${isPeriode ? '<i data-lucide="check" class="w-3.5 h-3.5 text-cyan-400 ml-0.5"></i>' : ''}
+            </button>
+
+            <button
+              type="button"
+              class="btn-delete-row p-1.5 rounded-lg text-slate-500 hover:text-rose-300 hover:bg-rose-950/60 border border-transparent hover:border-rose-800/50 transition-colors ml-1"
+              title="Hapus baris ini"
+            >
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
           </div>
         </div>
 
-        <div class="flex flex-wrap items-center justify-end gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800/60">
-          <button
-            type="button"
-            class="btn-toggle-deaktivasi inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-              isDeaktivasi
-                ? 'bg-rose-950/80 text-rose-300 border-rose-700/80 shadow-sm shadow-rose-950/40 font-semibold'
-                : 'bg-slate-800/60 text-slate-400 border-slate-700/60 hover:bg-rose-950/40 hover:text-rose-300 hover:border-rose-800/50'
-            }"
-          >
-            <i data-lucide="power-off" class="w-3.5 h-3.5 text-rose-400"></i>
-            <span>Deaktivasi</span>
-            ${isDeaktivasi ? '<i data-lucide="check" class="w-3.5 h-3.5 text-rose-400 ml-0.5"></i>' : ''}
-          </button>
-
-          <button
-            type="button"
-            class="btn-toggle-periode inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-              isPeriode
-                ? 'bg-cyan-950/80 text-cyan-300 border-cyan-700/80 shadow-sm shadow-cyan-950/40 font-semibold'
-                : 'bg-slate-800/60 text-slate-400 border-slate-700/60 hover:bg-cyan-950/40 hover:text-cyan-300 hover:border-cyan-800/50'
-            }"
-          >
-            <i data-lucide="calendar" class="w-3.5 h-3.5 text-cyan-400"></i>
-            <span>Periode</span>
-            ${isPeriode ? '<i data-lucide="check" class="w-3.5 h-3.5 text-cyan-400 ml-0.5"></i>' : ''}
-          </button>
-
-          <button
-            type="button"
-            class="btn-delete-row p-1.5 rounded-lg text-slate-500 hover:text-rose-300 hover:bg-rose-950/60 border border-transparent hover:border-rose-800/50 transition-colors ml-1"
-          >
-            <i data-lucide="trash-2" class="w-4 h-4"></i>
-          </button>
-        </div>
-
+        <!-- Period Input Sub-Panel (Rapi & Tidak Menumpuk) -->
         ${
           isPeriodOpen
-            ? `<div class="w-full mt-2 p-3 bg-slate-950/95 border border-cyan-700/60 rounded-xl shadow-2xl flex flex-col sm:flex-row items-center gap-2.5 z-10">
+            ? `<div class="w-full pt-3 mt-1 border-t border-slate-800/80 flex flex-col sm:flex-row items-center gap-2.5">
                 <div class="flex items-center gap-2 flex-1 w-full text-xs">
                   <span class="text-cyan-400 shrink-0 font-medium flex items-center gap-1">
                     <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
@@ -543,7 +548,7 @@ function renderRowsList() {
                     type="text"
                     placeholder="Paste teks periode, contoh: 2025-10-29 - 2025-11-28"
                     value="${escapeHtml(statusInfo.periodText || '2025-10-29 - 2025-11-28')}"
-                    class="input-period-text flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-cyan-200 placeholder:text-slate-600 focus:outline-none focus:border-cyan-500"
+                    class="input-period-text flex-1 bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-1.5 text-xs font-mono text-cyan-200 placeholder:text-slate-600 focus:outline-none focus:border-cyan-500"
                   />
                 </div>
                 <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
@@ -559,7 +564,7 @@ function renderRowsList() {
                       ? `<button type="button" class="btn-period-clear px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-300 text-xs transition-colors">Hapus Suffix</button>`
                       : ''
                   }
-                  <button type="button" class="btn-period-close p-1 text-slate-400 hover:text-slate-200">
+                  <button type="button" class="btn-period-close p-1 text-slate-400 hover:text-slate-200" title="Tutup">
                     <i data-lucide="x" class="w-4 h-4"></i>
                   </button>
                 </div>
@@ -568,8 +573,12 @@ function renderRowsList() {
         }
       `;
 
-      // 3-Zone Drag & Drop Events (Insert Above, Swap in Middle, Insert Below)
+      // Drag Events - Only allow drag if started from .drag-handle icon!
       rowEl.addEventListener('dragstart', (e) => {
+        if (!e.target.closest('.drag-handle')) {
+          e.preventDefault();
+          return false;
+        }
         state.draggedIndex = originalIndex;
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', originalIndex);
