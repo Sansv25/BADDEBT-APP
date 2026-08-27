@@ -438,7 +438,7 @@ function renderRowsList() {
 
       rowEl.innerHTML = `
         <div class="flex items-center gap-2.5 flex-1 min-w-0">
-          <div class="drag-handle cursor-grab active:cursor-grabbing p-1 text-slate-500 hover:text-cyan-400 hover:bg-slate-800/80 rounded transition-colors shrink-0" title="Tarik / Drag untuk ubah urutan baris">
+          <div class="drag-handle cursor-grab active:cursor-grabbing p-1 text-slate-500 hover:text-cyan-400 hover:bg-slate-800/80 rounded transition-colors shrink-0" title="Tarik / Drag untuk selipkan di antara baris">
             <i data-lucide="grip-vertical" class="w-4 h-4"></i>
           </div>
 
@@ -550,7 +550,7 @@ function renderRowsList() {
         }
       `;
 
-      // Drag and Drop Events
+      // Precise Insertion Drag & Drop Events
       rowEl.addEventListener('dragstart', (e) => {
         state.draggedIndex = originalIndex;
         e.dataTransfer.effectAllowed = 'move';
@@ -561,30 +561,52 @@ function renderRowsList() {
       rowEl.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        rowEl.classList.add('border-t-2', 'border-cyan-400', 'bg-slate-800/60');
+
+        const rect = rowEl.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        if (e.clientY < midY) {
+          rowEl.classList.add('border-t-4', 'border-cyan-400');
+          rowEl.classList.remove('border-b-4');
+        } else {
+          rowEl.classList.add('border-b-4', 'border-cyan-400');
+          rowEl.classList.remove('border-t-4');
+        }
       });
 
       rowEl.addEventListener('dragleave', () => {
-        rowEl.classList.remove('border-t-2', 'border-cyan-400', 'bg-slate-800/60');
+        rowEl.classList.remove('border-t-4', 'border-b-4', 'border-cyan-400');
       });
 
       rowEl.addEventListener('drop', (e) => {
         e.preventDefault();
-        rowEl.classList.remove('border-t-2', 'border-cyan-400', 'bg-slate-800/60');
+        rowEl.classList.remove('border-t-4', 'border-b-4', 'border-cyan-400');
         const fromIndex = state.draggedIndex;
-        const toIndex = originalIndex;
+        const targetIndex = originalIndex;
 
-        if (fromIndex !== null && fromIndex !== undefined && fromIndex !== toIndex) {
-          const movedRow = state.rows.splice(fromIndex, 1)[0];
-          state.rows.splice(toIndex, 0, movedRow);
-          saveRows();
-          syncRawTextFromRows();
-          renderApp();
+        if (fromIndex !== null && fromIndex !== undefined) {
+          const rect = rowEl.getBoundingClientRect();
+          const midY = rect.top + rect.height / 2;
+          const isBefore = e.clientY < midY;
+          
+          let insertIndex = isBefore ? targetIndex : targetIndex + 1;
+          
+          const [movedRow] = state.rows.splice(fromIndex, 1);
+          let adjustedIndex = insertIndex;
+          if (fromIndex < insertIndex) {
+            adjustedIndex = insertIndex - 1;
+          }
+
+          if (fromIndex !== adjustedIndex) {
+            state.rows.splice(adjustedIndex, 0, movedRow);
+            saveRows();
+            syncRawTextFromRows();
+            renderApp();
+          }
         }
       });
 
       rowEl.addEventListener('dragend', () => {
-        rowEl.classList.remove('opacity-40', 'border-cyan-500/80', 'border-t-2', 'border-cyan-400', 'bg-slate-800/60');
+        rowEl.classList.remove('opacity-40', 'border-cyan-500/80', 'border-t-2', 'border-b-2', 'border-t-4', 'border-b-4', 'border-cyan-400');
         state.draggedIndex = null;
       });
 
