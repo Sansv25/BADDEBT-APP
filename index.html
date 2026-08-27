@@ -4,15 +4,360 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Formatter List Pelanggan Bad Debt / FAT - Alat bantu perapian teks mentah data pelanggan dan ekspor ke .docx atau plain text" />
+    <meta name="description" content="Formatter List Pelanggan Bad Debt / FAT - Perapi teks mentah data pelanggan dan ekspor ke .docx atau plain text" />
     <title>Formatter List Pelanggan Bad Debt / FAT</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Plus Jakarta Sans', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            },
+          },
+        },
+      }
+    </script>
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- docx library bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+
+    <style>
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #0f172a;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+      }
+    </style>
   </head>
-  <body class="bg-slate-950 text-slate-100 font-['Plus_Jakarta_Sans',sans-serif] antialiased selection:bg-cyan-500 selection:text-white min-h-screen">
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+  <body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-cyan-500 selection:text-white min-h-screen flex flex-col relative">
+
+    <!-- Background ambient lighting -->
+    <div class="fixed top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="fixed top-1/3 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+    <!-- Header Navbar -->
+    <header class="sticky top-0 z-30 bg-slate-900/80 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-8 py-3.5">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-purple-600 p-0.5 shadow-lg shadow-cyan-500/20 flex items-center justify-center">
+            <div class="w-10 h-10 bg-slate-950 rounded-[10px] flex items-center justify-center border border-cyan-500/30">
+              <i data-lucide="sparkles" class="w-5 h-5 text-cyan-400"></i>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h1 class="text-lg font-bold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                Formatter List Pelanggan
+              </h1>
+              <span class="text-[10px] font-semibold tracking-wider px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-400 border border-cyan-800/50 uppercase">
+                FAT / Bad Debt
+              </span>
+            </div>
+            <p class="text-xs text-slate-400">
+              Perapi Teks Mentah Lapangan &amp; Export ke Word (.docx)
+            </p>
+          </div>
+        </div>
+
+        <!-- Status Counters -->
+        <div class="flex items-center space-x-3 text-xs">
+          <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/50 text-slate-300">
+            <i data-lucide="layers" class="w-4 h-4 text-cyan-400"></i>
+            <span>Total Baris:</span>
+            <strong id="stat-total-rows" class="text-white font-mono">0</strong>
+          </div>
+
+          <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/50 text-slate-300">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-indigo-400"></i>
+            <span>Kode FAT:</span>
+            <strong id="stat-fat-count" class="text-indigo-300 font-mono">0</strong>
+          </div>
+
+          <div class="hidden md:flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-emerald-400">
+            <i data-lucide="database" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <span class="text-[11px]">Auto-saved</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-8 space-y-8 relative z-10">
+      
+      <!-- Step 1: Paste Input Area -->
+      <section class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-base font-semibold text-slate-200 flex items-center gap-2">
+              <i data-lucide="file-text" class="w-5 h-5 text-cyan-400"></i>
+              1. Paste Teks Mentah Lapangan
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Tempelkan catatan dari WhatsApp / lapangan apa adanya di bawah ini
+            </p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              id="btn-paste-clipboard"
+              type="button"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
+            >
+              <i data-lucide="clipboard" class="w-3.5 h-3.5 text-cyan-400"></i>
+              Paste Clipboard
+            </button>
+            <button
+              id="btn-load-sample"
+              type="button"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-950/70 hover:bg-indigo-900/80 text-indigo-300 border border-indigo-800/60 transition-colors"
+            >
+              <i data-lucide="file-text" class="w-3.5 h-3.5 text-indigo-400"></i>
+              Muat Teks Sample
+            </button>
+          </div>
+        </div>
+
+        <div class="relative">
+          <textarea
+            id="raw-text-input"
+            rows="7"
+            placeholder="Contoh:&#10;DPRA160&#10;#1 551002266985 Riko Pramanto&#10;#2 130091822 Natasha Shannon&#10;#3 5510022669850 Norma Arindri Dangkua (DEAKTIVASI)&#10;#8 "
+            class="w-full bg-slate-950/90 border border-slate-800 rounded-xl p-4 text-sm font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all resize-y"
+          ></textarea>
+          <span id="line-count-badge" class="hidden absolute bottom-3 right-3 text-[11px] font-mono bg-slate-900/90 border border-slate-800 px-2 py-1 rounded text-slate-400">
+            0 baris
+          </span>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4">
+          <button
+            id="btn-clear-raw"
+            type="button"
+            class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-colors"
+          >
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            Kosongkan Input
+          </button>
+
+          <button
+            id="btn-process-text"
+            type="button"
+            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-medium text-sm text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-300 hover:from-cyan-300 hover:to-indigo-200 shadow-lg shadow-cyan-500/20 transition-all transform active:scale-95 cursor-pointer"
+          >
+            <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+            <span>Proses Teks ke List</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- Step 2: Row List Section -->
+      <section class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 shadow-xl backdrop-blur-sm">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
+          <div>
+            <h2 class="text-base font-semibold text-slate-200 flex items-center gap-2">
+              <i data-lucide="layers" class="w-5 h-5 text-indigo-400"></i>
+              2. List Hasil Process (Editable &amp; Deletable)
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Klik teks untuk edit, atur badge FAT/Pelanggan, Deaktivasi, atau Periode Terakhir
+            </p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Search Input -->
+            <div class="relative flex-1 sm:w-48">
+              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+              <input
+                id="search-input"
+                type="text"
+                placeholder="Cari di list..."
+                class="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-indigo-500"
+              />
+            </div>
+
+            <!-- Filter Pills -->
+            <div class="flex items-center p-1 rounded-xl bg-slate-950/80 border border-slate-800 text-xs">
+              <button
+                id="filter-tab-all"
+                type="button"
+                class="px-2.5 py-1 rounded-lg bg-slate-800 text-white font-medium shadow-sm transition-colors"
+              >
+                Semua (<span id="count-filter-all">0</span>)
+              </button>
+              <button
+                id="filter-tab-fat"
+                type="button"
+                class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-slate-200 transition-colors"
+              >
+                FAT (<span id="count-filter-fat">0</span>)
+              </button>
+              <button
+                id="filter-tab-item"
+                type="button"
+                class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-slate-200 transition-colors"
+              >
+                Pelanggan (<span id="count-filter-item">0</span>)
+              </button>
+            </div>
+
+            <!-- Add Row Button -->
+            <button
+              id="btn-toggle-add-row"
+              type="button"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-800/60 transition-colors"
+            >
+              <i data-lucide="plus" class="w-4 h-4 text-emerald-400"></i>
+              Tambah Baris
+            </button>
+          </div>
+        </div>
+
+        <!-- Add Row Inline Form -->
+        <div id="add-row-form-container" class="hidden mb-4 p-3 rounded-xl bg-emerald-950/30 border border-emerald-800/50 flex gap-2">
+          <input
+            id="add-row-input"
+            type="text"
+            placeholder="Tulis baris baru (misal: #15 551000... atau Kode FAT)..."
+            class="flex-1 bg-slate-950 border border-emerald-700/60 rounded-lg px-3 py-1.5 text-xs font-mono text-emerald-200 focus:outline-none"
+          />
+          <button
+            id="btn-save-new-row"
+            type="button"
+            class="px-4 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs transition-colors"
+          >
+            Simpan
+          </button>
+          <button
+            id="btn-cancel-new-row"
+            type="button"
+            class="px-3 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 text-xs"
+          >
+            Batal
+          </button>
+        </div>
+
+        <!-- Rows Container -->
+        <div id="rows-container" class="space-y-2.5 max-h-[600px] overflow-y-auto pr-1">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden text-center py-12 px-4 rounded-xl border border-dashed border-slate-800 bg-slate-950/40">
+          <i data-lucide="list-filter" class="w-10 h-10 text-slate-600 mx-auto mb-3"></i>
+          <h3 class="text-sm font-semibold text-slate-400">Tidak ada baris untuk ditampilkan</h3>
+          <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+            Paste teks mentah di area atas lalu klik tombol "Proses Teks ke List".
+          </p>
+        </div>
+      </section>
+
+      <!-- Step 3: Export Bar -->
+      <section class="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-5 shadow-2xl backdrop-blur-md sticky bottom-4 z-20">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+              <i data-lucide="file-down" class="w-4 h-4 text-cyan-400"></i>
+              3. Finalisasi &amp; Ekspor
+            </h3>
+            <p id="export-helper-text" class="text-xs text-slate-400 mt-0.5">
+              List masih kosong. Masukkan dan proses teks mentah terlebih dahulu.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-end gap-3 w-full sm:w-auto">
+            <button
+              id="btn-open-reset"
+              type="button"
+              class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-rose-400 bg-rose-950/40 hover:bg-rose-950/70 border border-rose-800/50 transition-colors"
+            >
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              Reset / Mulai Baru
+            </button>
+
+            <button
+              id="btn-copy-text"
+              type="button"
+              disabled
+              class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-indigo-200 bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-700/60 shadow-lg shadow-indigo-950/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              <i data-lucide="copy" class="w-4 h-4 text-indigo-400"></i>
+              <span id="copy-btn-label">Copy as Text</span>
+            </button>
+
+            <button
+              id="btn-export-docx"
+              type="button"
+              disabled
+              class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-indigo-400 hover:from-cyan-300 hover:to-indigo-300 shadow-xl shadow-cyan-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all transform active:scale-95"
+            >
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>Export DOCX</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 bg-slate-950/80 py-6 text-center text-xs text-slate-500 relative z-10">
+      <p>
+        Formatter List Pelanggan (Bad Debt / FAT) &bull; Client-Side Static &amp; Privacy-First Tool
+      </p>
+    </footer>
+
+    <!-- Reset Confirmation Modal -->
+    <div id="reset-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
+        <button id="btn-close-reset-modal" type="button" class="absolute top-4 right-4 text-slate-500 hover:text-slate-300 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+
+        <div class="w-12 h-12 rounded-full bg-rose-950/80 border border-rose-800/60 text-rose-400 flex items-center justify-center mb-4">
+          <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+        </div>
+
+        <h3 class="text-lg font-bold text-slate-100 mb-2">
+          Reset Data &amp; Mulai Baru?
+        </h3>
+        <p class="text-sm text-slate-400 mb-6 leading-relaxed">
+          Tindakan ini akan menghapus teks mentah dan seluruh list baris dari penyimpanan lokal (<code class="text-rose-300 font-mono text-xs">localStorage</code>). Data yang belum di-export akan hilang.
+        </p>
+
+        <div class="flex items-center justify-end gap-3">
+          <button id="btn-cancel-reset" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors">
+            Batal
+          </button>
+          <button id="btn-confirm-reset" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 shadow-lg shadow-rose-600/20 transition-all">
+            Ya, Reset Sekarang
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Application Script -->
+    <script src="app.js"></script>
   </body>
 </html>
