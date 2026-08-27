@@ -167,18 +167,31 @@ const filterTabItem = document.getElementById('filter-tab-item');
 const btnCopyText = document.getElementById('btn-copy-text');
 const btnExportDocx = document.getElementById('btn-export-docx');
 
-// Event Listeners
+// Event Listeners & Live Auto Update Input
+let inputDebounceTimer = null;
+
 rawTextInput.addEventListener('input', (e) => {
   state.rawText = e.target.value;
   saveRawText();
   updateLineCountBadge();
+
+  // Real-time auto-update rows as user types or pastes
+  clearTimeout(inputDebounceTimer);
+  inputDebounceTimer = setTimeout(() => {
+    state.rows = parseRawTextToRows(state.rawText);
+    saveRows();
+    renderApp();
+  }, 250);
 });
 
 document.getElementById('btn-load-sample').addEventListener('click', () => {
   state.rawText = SAMPLE_RAW_TEXT;
   rawTextInput.value = SAMPLE_RAW_TEXT;
   saveRawText();
-  updateLineCountBadge();
+  state.rows = parseRawTextToRows(state.rawText);
+  saveRows();
+  syncRawTextFromRows();
+  renderApp();
 });
 
 document.getElementById('btn-paste-clipboard').addEventListener('click', async () => {
@@ -188,7 +201,10 @@ document.getElementById('btn-paste-clipboard').addEventListener('click', async (
       state.rawText = text;
       rawTextInput.value = text;
       saveRawText();
-      updateLineCountBadge();
+      state.rows = parseRawTextToRows(state.rawText);
+      saveRows();
+      syncRawTextFromRows();
+      renderApp();
     }
   } catch (err) {
     console.error('Clipboard access error:', err);
@@ -199,7 +215,9 @@ document.getElementById('btn-clear-raw').addEventListener('click', () => {
   state.rawText = '';
   rawTextInput.value = '';
   saveRawText();
-  updateLineCountBadge();
+  state.rows = [];
+  saveRows();
+  renderApp();
 });
 
 document.getElementById('btn-process-text').addEventListener('click', () => {
