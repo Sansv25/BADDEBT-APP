@@ -300,10 +300,11 @@ function buildRichClipboard(rows) {
 
   const htmlParagraphs = rows.map((r) => {
     const escapedText = escapeHtml(r.text);
-    if (r.isHeading) {
-      return `<p><b><span style="font-size:14pt">${escapedText}</span></b></p>`;
+    const isHeading = r.isHeading !== undefined ? r.isHeading : isFatHeading(r.text);
+    if (isHeading) {
+      return `<p style="font-family:Cambria,Georgia,serif;font-size:26pt;font-weight:bold;color:#1F5C73;margin:0 0 6pt 0;">${escapedText}</p>`;
     }
-    return `<p><span style="font-size:11pt">${escapedText}</span></p>`;
+    return `<p style="font-family:Calibri,Arial,sans-serif;font-size:11pt;font-weight:normal;color:#000000;margin:0 0 4pt 0;">${escapedText}</p>`;
   });
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${htmlParagraphs.join('')}</body></html>`;
@@ -357,21 +358,22 @@ btnExportDocx.addEventListener('click', async () => {
       return;
     }
 
-    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = docxLib;
+    const { Document, Packer, Paragraph, TextRun } = docxLib;
     const children = [];
 
     state.rows.forEach((row) => {
-      if (row.isHeading) {
+      const isHeading = row.isHeading !== undefined ? row.isHeading : isFatHeading(row.text);
+      if (isHeading) {
         children.push(
           new Paragraph({
-            heading: HeadingLevel.HEADING_2,
-            spacing: { before: 300, after: 120 },
+            spacing: { before: 240, after: 120 },
             children: [
               new TextRun({
                 text: row.text,
                 bold: true,
-                size: 28, // 14pt
-                color: '1E293B',
+                font: 'Cambria',
+                size: 52, // 26pt
+                color: '1F5C73',
               }),
             ],
           })
@@ -379,12 +381,14 @@ btnExportDocx.addEventListener('click', async () => {
       } else {
         children.push(
           new Paragraph({
-            spacing: { before: 40, after: 120 },
+            spacing: { before: 0, after: 80 },
             children: [
               new TextRun({
                 text: row.text,
+                bold: false,
+                font: 'Calibri',
                 size: 22, // 11pt
-                color: '334155',
+                color: '000000',
               }),
             ],
           })
