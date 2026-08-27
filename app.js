@@ -302,9 +302,9 @@ function buildRichClipboard(rows) {
     const escapedText = escapeHtml(r.text);
     const isHeading = r.isHeading !== undefined ? r.isHeading : isFatHeading(r.text);
     if (isHeading) {
-      return `<p style="font-family:Cambria,Georgia,serif;font-size:26pt;font-weight:bold;color:#1F5C73;margin:0 0 6pt 0;">${escapedText}</p>`;
+      return `<p style="font-family:'Times New Roman',Times,serif;font-size:26pt;font-weight:bold;color:#1F5C73;margin:0 0 6pt 0;">${escapedText}</p>`;
     }
-    return `<p style="font-family:Calibri,Arial,sans-serif;font-size:11pt;font-weight:normal;color:#000000;margin:0 0 4pt 0;">${escapedText}</p>`;
+    return `<p style="font-family:'Times New Roman',Times,serif;font-size:11pt;font-weight:normal;color:#000000;margin:0 0 4pt 0;">${escapedText}</p>`;
   });
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${htmlParagraphs.join('')}</body></html>`;
@@ -371,7 +371,7 @@ btnExportDocx.addEventListener('click', async () => {
               new TextRun({
                 text: row.text,
                 bold: true,
-                font: 'Cambria',
+                font: 'Times New Roman',
                 size: 52, // 26pt
                 color: '1F5C73',
               }),
@@ -386,7 +386,7 @@ btnExportDocx.addEventListener('click', async () => {
               new TextRun({
                 text: row.text,
                 bold: false,
-                font: 'Calibri',
+                font: 'Times New Roman',
                 size: 22, // 11pt
                 color: '000000',
               }),
