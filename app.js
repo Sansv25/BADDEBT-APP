@@ -295,18 +295,55 @@ document.getElementById('btn-confirm-reset').addEventListener('click', () => {
 });
 
 // Copy & Export
+function buildRichClipboard(rows) {
+  const plain = rows.map((r) => r.text).join('\n');
+
+  const htmlParagraphs = rows.map((r) => {
+    const escapedText = escapeHtml(r.text);
+    if (r.isHeading) {
+      return `<p><b><span style="font-size:14pt">${escapedText}</span></b></p>`;
+    }
+    return `<p><span style="font-size:11pt">${escapedText}</span></p>`;
+  });
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${htmlParagraphs.join('')}</body></html>`;
+
+  return { plain, html };
+}
+
+async function copyRowsAsRichText(rows) {
+  const { plain, html } = buildRichClipboard(rows);
+
+  try {
+    if (navigator.clipboard && typeof window.ClipboardItem !== 'undefined') {
+      const blobHtml = new Blob([html], { type: 'text/html' });
+      const blobText = new Blob([plain], { type: 'text/plain' });
+      const item = new ClipboardItem({
+        'text/html': blobHtml,
+        'text/plain': blobText,
+      });
+      await navigator.clipboard.write([item]);
+    } else {
+      await navigator.clipboard.writeText(plain);
+    }
+  } catch (err) {
+    console.warn('Clipboard write fallback to writeText:', err);
+    await navigator.clipboard.writeText(plain);
+  }
+}
+
 btnCopyText.addEventListener('click', async () => {
   if (state.rows.length === 0) return;
   try {
-    const plainText = state.rows.map((r) => r.text).join('\n');
-    await navigator.clipboard.writeText(plainText);
+    await copyRowsAsRichText(state.rows);
     const label = document.getElementById('copy-btn-label');
-    const orig = label.innerText;
-    label.innerText = 'Tersalin ke Clipboard!';
+    const orig = label ? label.innerText : 'Copy as Text';
+    if (label) label.innerText = 'Tersalin ke Clipboard!';
     setTimeout(() => {
-      label.innerText = orig;
-    }, 2500);
+      if (label) label.innerText = orig;
+    }, 1500);
   } catch (err) {
+    console.error('Copy failed:', err);
     alert('Gagal menyalin ke clipboard');
   }
 });
