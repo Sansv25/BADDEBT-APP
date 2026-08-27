@@ -446,12 +446,15 @@ function renderRowsList() {
       const isPeriode = statusInfo.statusType === 'periode';
       const isPeriodOpen = state.activePeriodRowId === row.id;
 
+      const isEven = originalIndex % 2 === 0;
       const rowEl = document.createElement('div');
       rowEl.setAttribute('draggable', 'true');
       rowEl.className = `group relative flex flex-col gap-3 p-3.5 rounded-xl border transition-all cursor-default ${
         row.isHeading
-          ? 'bg-indigo-950/40 border-indigo-500/30 hover:border-indigo-500/50 shadow-md shadow-indigo-950/20'
-          : 'bg-slate-900/40 border-slate-800/70 hover:border-slate-700/80 hover:bg-slate-900/80'
+          ? 'bg-indigo-950/60 border-indigo-500/40 hover:border-indigo-500/60 shadow-md shadow-indigo-950/30'
+          : isEven
+          ? 'bg-slate-900/70 border-slate-800/80 hover:bg-slate-800/70'
+          : 'bg-slate-950/70 border-slate-800/50 hover:bg-slate-900/80'
       }`;
 
       rowEl.innerHTML = `
