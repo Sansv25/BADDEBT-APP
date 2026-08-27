@@ -27,6 +27,7 @@ if (!state.rows || state.rows.length === 0) {
   if (state.rawText.trim()) {
     state.rows = parseRawTextToRows(state.rawText);
     saveRows();
+    syncRawTextFromRows();
   }
 }
 
@@ -37,6 +38,16 @@ function saveRawText() {
 
 function saveRows() {
   localStorage.setItem(STORAGE_KEY_ROWS, JSON.stringify(state.rows));
+}
+
+// Keep textarea and rawText state in sync with current rows
+function syncRawTextFromRows() {
+  state.rawText = state.rows.map((r) => r.text).join('\n');
+  if (rawTextInput) {
+    rawTextInput.value = state.rawText;
+  }
+  saveRawText();
+  updateLineCountBadge();
 }
 
 function clearAllData() {
@@ -192,6 +203,7 @@ document.getElementById('btn-clear-raw').addEventListener('click', () => {
 document.getElementById('btn-process-text').addEventListener('click', () => {
   state.rows = parseRawTextToRows(state.rawText);
   saveRows();
+  syncRawTextFromRows();
   renderApp();
 });
 
@@ -245,6 +257,7 @@ function submitNewRow() {
       isHeading: isFatHeading(text),
     });
     saveRows();
+    syncRawTextFromRows();
     addRowInput.value = '';
     addRowFormContainer.classList.add('hidden');
     renderApp();
@@ -553,6 +566,7 @@ function renderRowsList() {
           if (newText) {
             row.text = newText;
             saveRows();
+            syncRawTextFromRows();
           }
           state.editingRowId = null;
           renderApp();
@@ -575,6 +589,7 @@ function renderRowsList() {
         }
         state.activePeriodRowId = null;
         saveRows();
+        syncRawTextFromRows();
         renderApp();
       });
 
@@ -586,6 +601,7 @@ function renderRowsList() {
       rowEl.querySelector('.btn-delete-row').addEventListener('click', () => {
         state.rows = state.rows.filter((r) => r.id !== row.id);
         saveRows();
+        syncRawTextFromRows();
         renderApp();
       });
 
@@ -599,6 +615,7 @@ function renderRowsList() {
           if (txt) {
             row.text = formatStatusText(row.text, 'periode', txt);
             saveRows();
+            syncRawTextFromRows();
           }
           state.activePeriodRowId = null;
           renderApp();
@@ -632,6 +649,7 @@ function renderRowsList() {
             row.text = stripStatusSuffix(row.text);
             state.activePeriodRowId = null;
             saveRows();
+            syncRawTextFromRows();
             renderApp();
           });
         }
