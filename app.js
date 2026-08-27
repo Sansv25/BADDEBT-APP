@@ -438,7 +438,7 @@ function renderRowsList() {
 
       rowEl.innerHTML = `
         <div class="flex items-center gap-2.5 flex-1 min-w-0">
-          <div class="drag-handle cursor-grab active:cursor-grabbing p-1 text-slate-500 hover:text-cyan-400 hover:bg-slate-800/80 rounded transition-colors shrink-0" title="Tarik / Drag untuk selipkan di antara baris">
+          <div class="drag-handle cursor-grab active:cursor-grabbing p-1 text-slate-500 hover:text-cyan-400 hover:bg-slate-800/80 rounded transition-colors shrink-0" title="Tarik / Drag untuk selipkan di antara baris atau tukar posisi">
             <i data-lucide="grip-vertical" class="w-4 h-4"></i>
           </div>
 
@@ -550,7 +550,7 @@ function renderRowsList() {
         }
       `;
 
-      // Precise Insertion Drag & Drop Events
+      // 3-Zone Drag & Drop Events (Insert Above, Swap in Middle, Insert Below)
       rowEl.addEventListener('dragstart', (e) => {
         state.draggedIndex = originalIndex;
         e.dataTransfer.effectAllowed = 'move';
@@ -563,50 +563,90 @@ function renderRowsList() {
         e.dataTransfer.dropEffect = 'move';
 
         const rect = rowEl.getBoundingClientRect();
-        const midY = rect.top + rect.height / 2;
-        if (e.clientY < midY) {
-          rowEl.classList.add('border-t-4', 'border-cyan-400');
-          rowEl.classList.remove('border-b-4');
+        const relativeY = (e.clientY - rect.top) / rect.height;
+
+        // Clear previous drag indicators
+        rowEl.classList.remove(
+          'border-t-4', 'border-b-4', 'border-cyan-400',
+          'ring-2', 'ring-indigo-400', 'bg-indigo-950/80',
+          'shadow-[0_-6px_15px_rgba(6,182,212,0.8)]',
+          'shadow-[0_6px_15px_rgba(6,182,212,0.8)]',
+          'shadow-[0_0_20px_rgba(99,102,241,0.5)]'
+        );
+
+        if (relativeY < 0.25) {
+          // Insert Before Line Indicator
+          rowEl.classList.add('border-t-4', 'border-cyan-400', 'shadow-[0_-6px_15px_rgba(6,182,212,0.8)]');
+        } else if (relativeY > 0.75) {
+          // Insert After Line Indicator
+          rowEl.classList.add('border-b-4', 'border-cyan-400', 'shadow-[0_6px_15px_rgba(6,182,212,0.8)]');
         } else {
-          rowEl.classList.add('border-b-4', 'border-cyan-400');
-          rowEl.classList.remove('border-t-4');
+          // Swap Positions Highlight Box
+          rowEl.classList.add('ring-2', 'ring-indigo-400', 'bg-indigo-950/80', 'shadow-[0_0_20px_rgba(99,102,241,0.5)]');
         }
       });
 
       rowEl.addEventListener('dragleave', () => {
-        rowEl.classList.remove('border-t-4', 'border-b-4', 'border-cyan-400');
+        rowEl.classList.remove(
+          'border-t-4', 'border-b-4', 'border-cyan-400',
+          'ring-2', 'ring-indigo-400', 'bg-indigo-950/80',
+          'shadow-[0_-6px_15px_rgba(6,182,212,0.8)]',
+          'shadow-[0_6px_15px_rgba(6,182,212,0.8)]',
+          'shadow-[0_0_20px_rgba(99,102,241,0.5)]'
+        );
       });
 
       rowEl.addEventListener('drop', (e) => {
         e.preventDefault();
-        rowEl.classList.remove('border-t-4', 'border-b-4', 'border-cyan-400');
+        rowEl.classList.remove(
+          'border-t-4', 'border-b-4', 'border-cyan-400',
+          'ring-2', 'ring-indigo-400', 'bg-indigo-950/80',
+          'shadow-[0_-6px_15px_rgba(6,182,212,0.8)]',
+          'shadow-[0_6px_15px_rgba(6,182,212,0.8)]',
+          'shadow-[0_0_20px_rgba(99,102,241,0.5)]'
+        );
+
         const fromIndex = state.draggedIndex;
         const targetIndex = originalIndex;
 
-        if (fromIndex !== null && fromIndex !== undefined) {
+        if (fromIndex !== null && fromIndex !== undefined && fromIndex !== targetIndex) {
           const rect = rowEl.getBoundingClientRect();
-          const midY = rect.top + rect.height / 2;
-          const isBefore = e.clientY < midY;
-          
-          let insertIndex = isBefore ? targetIndex : targetIndex + 1;
-          
-          const [movedRow] = state.rows.splice(fromIndex, 1);
-          let adjustedIndex = insertIndex;
-          if (fromIndex < insertIndex) {
-            adjustedIndex = insertIndex - 1;
+          const relativeY = (e.clientY - rect.top) / rect.height;
+
+          if (relativeY >= 0.25 && relativeY <= 0.75) {
+            // SWAP POSITIONS
+            const temp = state.rows[fromIndex];
+            state.rows[fromIndex] = state.rows[targetIndex];
+            state.rows[targetIndex] = temp;
+          } else {
+            // INSERT IN BETWEEN (BEFORE / AFTER)
+            const isBefore = relativeY < 0.25;
+            let insertIndex = isBefore ? targetIndex : targetIndex + 1;
+
+            const [movedRow] = state.rows.splice(fromIndex, 1);
+            let adjustedIndex = insertIndex;
+            if (fromIndex < insertIndex) {
+              adjustedIndex = insertIndex - 1;
+            }
+
+            state.rows.splice(adjustedIndex, 0, movedRow);
           }
 
-          if (fromIndex !== adjustedIndex) {
-            state.rows.splice(adjustedIndex, 0, movedRow);
-            saveRows();
-            syncRawTextFromRows();
-            renderApp();
-          }
+          saveRows();
+          syncRawTextFromRows();
+          renderApp();
         }
       });
 
       rowEl.addEventListener('dragend', () => {
-        rowEl.classList.remove('opacity-40', 'border-cyan-500/80', 'border-t-2', 'border-b-2', 'border-t-4', 'border-b-4', 'border-cyan-400');
+        rowEl.classList.remove(
+          'opacity-40', 'border-cyan-500/80',
+          'border-t-4', 'border-b-4', 'border-cyan-400',
+          'ring-2', 'ring-indigo-400', 'bg-indigo-950/80',
+          'shadow-[0_-6px_15px_rgba(6,182,212,0.8)]',
+          'shadow-[0_6px_15px_rgba(6,182,212,0.8)]',
+          'shadow-[0_0_20px_rgba(99,102,241,0.5)]'
+        );
         state.draggedIndex = null;
       });
 
