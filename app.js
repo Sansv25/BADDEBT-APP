@@ -754,6 +754,9 @@ function renderRowsList() {
       if (isPeriodOpen) {
         const periodField = rowEl.querySelector('.input-period-text');
         periodField.focus();
+        setTimeout(() => {
+          rowEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 50);
 
         const applyPeriod = (val) => {
           const txt = val !== undefined ? val : periodField.value.trim();
