@@ -20,6 +20,7 @@ let state = {
   searchQuery: '',
   editingRowId: null,
   activePeriodRowId: null,
+  draggedIndex: null,
 };
 
 // Auto-parse on load if raw text exists but rows empty
@@ -58,6 +59,7 @@ function clearAllData() {
   state.searchQuery = '';
   state.activePeriodRowId = null;
   state.editingRowId = null;
+  state.draggedIndex = null;
   renderApp();
 }
 
@@ -427,14 +429,19 @@ function renderRowsList() {
       const isPeriodOpen = state.activePeriodRowId === row.id;
 
       const rowEl = document.createElement('div');
-      rowEl.className = `group relative flex flex-col md:flex-row md:items-center justify-between gap-3 p-3.5 rounded-xl border transition-all ${
+      rowEl.setAttribute('draggable', 'true');
+      rowEl.className = `group relative flex flex-col md:flex-row md:items-center justify-between gap-3 p-3.5 rounded-xl border transition-all cursor-default ${
         row.isHeading
           ? 'bg-indigo-950/40 border-indigo-500/30 hover:border-indigo-500/50 shadow-md shadow-indigo-950/20'
           : 'bg-slate-900/40 border-slate-800/70 hover:border-slate-700/80 hover:bg-slate-900/80'
       }`;
 
       rowEl.innerHTML = `
-        <div class="flex items-center gap-3 flex-1 min-w-0">
+        <div class="flex items-center gap-2.5 flex-1 min-w-0">
+          <div class="drag-handle cursor-grab active:cursor-grabbing p-1 text-slate-500 hover:text-cyan-400 hover:bg-slate-800/80 rounded transition-colors shrink-0" title="Tarik / Drag untuk ubah urutan baris">
+            <i data-lucide="grip-vertical" class="w-4 h-4"></i>
+          </div>
+
           <span class="text-xs font-mono text-slate-500 w-6 text-right shrink-0">#${originalIndex + 1}</span>
           
           <button
@@ -542,6 +549,44 @@ function renderRowsList() {
             : ''
         }
       `;
+
+      // Drag and Drop Events
+      rowEl.addEventListener('dragstart', (e) => {
+        state.draggedIndex = originalIndex;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', originalIndex);
+        rowEl.classList.add('opacity-40', 'border-cyan-500/80');
+      });
+
+      rowEl.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        rowEl.classList.add('border-t-2', 'border-cyan-400', 'bg-slate-800/60');
+      });
+
+      rowEl.addEventListener('dragleave', () => {
+        rowEl.classList.remove('border-t-2', 'border-cyan-400', 'bg-slate-800/60');
+      });
+
+      rowEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        rowEl.classList.remove('border-t-2', 'border-cyan-400', 'bg-slate-800/60');
+        const fromIndex = state.draggedIndex;
+        const toIndex = originalIndex;
+
+        if (fromIndex !== null && fromIndex !== undefined && fromIndex !== toIndex) {
+          const movedRow = state.rows.splice(fromIndex, 1)[0];
+          state.rows.splice(toIndex, 0, movedRow);
+          saveRows();
+          syncRawTextFromRows();
+          renderApp();
+        }
+      });
+
+      rowEl.addEventListener('dragend', () => {
+        rowEl.classList.remove('opacity-40', 'border-cyan-500/80', 'border-t-2', 'border-cyan-400', 'bg-slate-800/60');
+        state.draggedIndex = null;
+      });
 
       // Row Actions Setup
       rowEl.querySelector('.btn-toggle-type').addEventListener('click', () => {
