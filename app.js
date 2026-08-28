@@ -926,16 +926,18 @@ function renderRowsList() {
       });
 
       dragHandle.addEventListener('mouseleave', () => {
-        if (state.draggedIndex === null) {
-          rowEl.setAttribute('draggable', 'false');
-        }
+        setTimeout(() => {
+          if (state.draggedIndex !== originalIndex) {
+            rowEl.setAttribute('draggable', 'false');
+          }
+        }, 200);
       });
 
       rowEl.addEventListener('dragstart', (e) => {
         state.draggedIndex = originalIndex;
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', originalIndex);
-        rowEl.classList.add('opacity-40', 'border-cyan-300 dark:border-cyan-500/80');
+        rowEl.classList.add('opacity-40', 'border-cyan-300', 'dark:border-cyan-500/80');
       });
 
       rowEl.addEventListener('dragover', (e) => {
@@ -948,7 +950,7 @@ function renderRowsList() {
         // Clear previous drag indicators
         rowEl.classList.remove(
           'border-t-4', 'border-b-4', 'border-cyan-400',
-          'ring-2', 'ring-indigo-400', 'bg-indigo-50 dark:bg-indigo-950/80',
+          'ring-2', 'ring-indigo-400', 'bg-indigo-50', 'dark:bg-indigo-950/80',
           'shadow-[0_-6px_15px_rgba(6,182,212,0.8)]',
           'shadow-[0_6px_15px_rgba(6,182,212,0.8)]',
           'shadow-[0_0_20px_rgba(99,102,241,0.5)]'
@@ -962,14 +964,14 @@ function renderRowsList() {
           rowEl.classList.add('border-b-4', 'border-cyan-400', 'shadow-[0_6px_15px_rgba(6,182,212,0.8)]');
         } else {
           // Swap Positions Highlight Box
-          rowEl.classList.add('ring-2', 'ring-indigo-400', 'bg-indigo-50 dark:bg-indigo-950/80', 'shadow-[0_0_20px_rgba(99,102,241,0.5)]');
+          rowEl.classList.add('ring-2', 'ring-indigo-400', 'bg-indigo-50', 'dark:bg-indigo-950/80', 'shadow-[0_0_20px_rgba(99,102,241,0.5)]');
         }
       });
 
       rowEl.addEventListener('dragleave', () => {
         rowEl.classList.remove(
           'border-t-4', 'border-b-4', 'border-cyan-400',
-          'ring-2', 'ring-indigo-400', 'bg-indigo-50 dark:bg-indigo-950/80',
+          'ring-2', 'ring-indigo-400', 'bg-indigo-50', 'dark:bg-indigo-950/80',
           'shadow-[0_-6px_15px_rgba(6,182,212,0.8)]',
           'shadow-[0_6px_15px_rgba(6,182,212,0.8)]',
           'shadow-[0_0_20px_rgba(99,102,241,0.5)]'
@@ -980,7 +982,7 @@ function renderRowsList() {
         e.preventDefault();
         rowEl.classList.remove(
           'border-t-4', 'border-b-4', 'border-cyan-400',
-          'ring-2', 'ring-indigo-400', 'bg-indigo-50 dark:bg-indigo-950/80',
+          'ring-2', 'ring-indigo-400', 'bg-indigo-50', 'dark:bg-indigo-950/80',
           'shadow-[0_-6px_15px_rgba(6,182,212,0.8)]',
           'shadow-[0_6px_15px_rgba(6,182,212,0.8)]',
           'shadow-[0_0_20px_rgba(99,102,241,0.5)]'
@@ -1021,9 +1023,9 @@ function renderRowsList() {
       rowEl.addEventListener('dragend', () => {
         rowEl.setAttribute('draggable', 'false');
         rowEl.classList.remove(
-          'opacity-40', 'border-cyan-300 dark:border-cyan-500/80',
+          'opacity-40', 'border-cyan-300', 'dark:border-cyan-500/80',
           'border-t-4', 'border-b-4', 'border-cyan-400',
-          'ring-2', 'ring-indigo-400', 'bg-indigo-50 dark:bg-indigo-950/80',
+          'ring-2', 'ring-indigo-400', 'bg-indigo-50', 'dark:bg-indigo-950/80',
           'shadow-[0_-6px_15px_rgba(6,182,212,0.8)]',
           'shadow-[0_6px_15px_rgba(6,182,212,0.8)]',
           'shadow-[0_0_20px_rgba(99,102,241,0.5)]'
